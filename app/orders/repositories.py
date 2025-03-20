@@ -1,17 +1,30 @@
+import uuid
+from typing import Any
+
+from sqlalchemy import Table, Connection
 
 from app.core.database.repositories import SQLAlchemyCoreRepository
-from app.orders.models import Order
-from app.orders.tables import order_lines_table
+from app.orders.models import Order, OrderLine
+from app.orders.tables import orders_table, order_lines_table
 
 
 class OrderRepository(SQLAlchemyCoreRepository[Order]):
-    # override base method since logic is slightly different
-    # we save 2 objects in a single transaction to keep consistency and atomicity
-    def add_one(self, order_lines_data: list[dict]) -> Order:
-        with self.session_factory() as sess:
-            order = super().add_one(parent_session=sess)
+    @property
+    def table(self) -> Table:
+        return orders_table
 
-            # add order lines
-            order_lines_table.insert().values(order_lines_data)
+    def _make_row(self, raw_data):
+        pass
 
-        return order
+
+class OrderLineRepository(SQLAlchemyCoreRepository[OrderLine]):
+    @property
+    def table(self) -> Table:
+        return order_lines_table
+
+    def _make_row(self, raw_data):
+        pass
+
+    def add_bulk(self, data: list[dict], /, *, conn: Connection, order_id: uuid.UUID, **kwargs: Any) -> list[OrderLine]: ...
+    
+
